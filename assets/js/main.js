@@ -65,7 +65,7 @@ function updateReady(worker){
         }else if(e.target && e.target.id== 'btn-cancel'){
             setTimeout(() => {
                 document.querySelector('#update-message div').remove();
-            }, 1000);
+            }, 500);
         }
 
     })
@@ -254,7 +254,7 @@ function fixDragBtn() {
     buttonwidth = Number(buttonwidth .replace("px", ""));
     dragleft = containertop + textareawidth + leftpadding + (leftpadding / 2);
     document.getElementById("dragbar").style.top = dragleft + "px";
-    document.getElementById("dragbar").style.left = "5px";
+    document.getElementById("dragbar").style.left = "10px";
     document.getElementById("dragbar").style.width = textareaheight;
     document.getElementById("dragbar").style.cursor = "row-resize";        
   }
@@ -322,8 +322,6 @@ function click_google_savebtn() {
 function click_google_loadbtn() {
   document.getElementById('driveLoadModal').style.display='block'
 }
-   
-
 function colorcoding() { 
   window.editor = CodeMirror.fromTextArea(document.getElementById("textareaCode"), {
     mode: "htmlmixed",
@@ -361,280 +359,6 @@ function getStyleValue(elmnt,style) {
         return elmnt.currentStyle[style];
     }
 }
-//SAVE AND OPEN SCRIPT
-var oauthToken;
-var userAction;
-var pickerApiLoaded;
-var developerKey = 'AIzaSyAMZDPXiGcCNWs1UCWG9LS6kkW5YiABfJ0';
-var CLIENT_ID = '451843133508-ckbr5r6ch1ofqbmh87oll4u6ltinqv2t.apps.googleusercontent.com';
-var SCOPES = ['https://www.googleapis.com/auth/drive.file'];
-
-//Check if current user has authorized this application
-function checkAuth() {
-    gapi.auth.authorize(
-    {  'client_id': CLIENT_ID,
-        'scope': SCOPES.join(' '),
-        'immediate': true
-    }, handleAuthResult);
-}
-
-//Handle response from authorization server
-function handleAuthResult(authResult) {
-    if (authResult && !authResult.error) {
-        oauthToken = authResult.access_token;
-        loadApi();
-    }
-}
-
-// Initiate auth flow in response to user clicking authorize button
-function handleAuthClick(event,userClick) {
-    userAction = userClick;
-    gapi.auth.authorize(
-        {client_id: CLIENT_ID, scope: SCOPES, immediate: false},
-        handleAuthResult);
-    return false;
-}
-
-// Load API library
-function loadApi() {
-    gapi.client.load('drive', 'v3');
-    gapi.load('picker', {'callback': onPickerApiLoad});
-}
-function onPickerApiLoad() {
-    pickerApiLoaded = true;
-    if (userAction=="save") {
-        userAction="";
-        document.getElementById('driveText').style.display='none';
-        document.getElementById('driveSavedPanel').style.display='block';
-        createFileWithHTMLContent(document.getElementById('googleFileName').value,document.getElementById('textareaCode').value)     
-    }
-    if (userAction=="open") {
-        userAction="";
-        createPicker();
-    }
-}
-
-// Create and render a Picker object for picking HTML file
-function createPicker() {
-    if (pickerApiLoaded) {
-        var view = new google.picker.View(google.picker.ViewId.DOCS);
-        view.setMimeTypes("text/html");
-        var picker = new google.picker.PickerBuilder().
-            addView(view).
-            setOAuthToken(oauthToken).
-            setDeveloperKey(developerKey).
-            setCallback(pickerCallback).
-            build();
-        picker.setVisible(true);
-    }
-}
-// Put content of file in tryit editor
-function pickerCallback(data) {
-    var docID = '';
-    if (data[google.picker.Response.ACTION] == google.picker.Action.PICKED) {
-        var doc = data[google.picker.Response.DOCUMENTS][0];
-        docID = doc[google.picker.Document.ID];
-        getContentOfFile(docID);
-    }
-}
-
-//Get contents
-function getContentOfFile(theID){
-    gapi.client.request({'path': '/drive/v2/files/'+theID,'method': 'GET',callback: function ( theResponseJS, theResponseTXT ) {
-        var myToken = gapi.auth.getToken();
-        var myXHR   = new XMLHttpRequest();
-        myXHR.open('GET', theResponsejsUrl, true );
-        myXHR.setRequestHeader('Authorization', 'Bearer ' + myToken.access_token );
-        myXHR.onreadystatechange = function( theProgressEvent ) {
-            if (myXHR.readyState == 4) {
-                if ( myXHR.status == 200 ) {
-                    var code = myXHR.response;
-                    document.getElementById("textareaCode").value=code;
-                    window.editor.getDoc().setValue(code);
-                    submitTryit(1);
-                    resetDriveLoadModal();
-                }
-            }
-        }
-        myXHR.send();
-        }
-    });
-}
-
-var createFileWithHTMLContent = function(name,data,callback) {
-    const boundary = '-------314159265358979323846';
-    const delimiter = "\r\n--" + boundary + "\r\n";
-    const close_delim = "\r\n--" + boundary + "--";
-    const contentType = 'text/html';
-
-    var metadata = {
-        'name': name,
-        'mimeType': contentType
-    };
-
-    var multipartRequestBody =
-        delimiter +
-        'Content-Type: application/json\r\n\r\n' +
-        JSON.stringify(metadata) +
-        delimiter +
-        'Content-Type: ' + contentType + '\r\n\r\n' +
-        data +
-        close_delim;
-
-    var request = gapi.client.request({
-        'path': '/upload/drive/v3/files',
-        'method': 'POST',
-        'params': {'uploadType': 'multipart'},
-        'headers': {
-            'Content-Type': 'multipart/related; boundary="' + boundary + '"'
-        },
-        'body': multipartRequestBody});
-    if (!callback) {
-        callback = function(file) {
-            console.log(file);
-            document.getElementById("driveSavedText").innerHTML = file.name + " saved in Google Drive";
-            document.getElementById("driveSavedPanel").className = "w3-panel w3-large";
-        };
-    }
-    request.execute(callback);
-}
-
-if (navigator.userAgent.indexOf("MSIE") > 0 || navigator.userAgent.indexOf("Edge") > 0) {
-    document.getElementById("saveGDriveBtn").style.display = "none";
-    document.getElementById("loadGDriveBtn").style.display = "none";
-}
-
-
-function resetDriveSaveModal() {
-    document.getElementById('driveSavedText').innerHTML='';
-    document.getElementById('driveSaveModal').style.display='none'
-    document.getElementById('driveSavedPanel').style.display='none'
-    document.getElementById('driveText').style.display='block'
-    document.getElementById("driveSavedPanel").className = "w3-panel w3-large loader";
-}
-function resetDriveLoadModal() {
-    document.getElementById('driveLoadModal').style.display='none'
-}
-
-function saveFile(code) {
-    document.getElementById('preSave').style.display='none';
-    if (code.length>20000) {
-        document.getElementById('errorSave').style.display='block';    
-        return;
-    }
-    document.getElementById('postSave').style.display='block';    
-    var paramObj = {};
-    paramObj.code = code;
-    var paramB = JSON.stringify(paramObj);
-    var httpB = new XMLHttpRequest();
-    httpB.open("POST", globalURL, true);
-
-    httpB.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-
-    httpB.onreadystatechange = function() {
-    if(httpB.readyState == 4 && httpB.status == 200) {
-        if(httpB.responseText.substr(0,2) == "OK" ) {
-          var getId = httpB.responseText.substr(2);
-          document.getElementById("shareLink").href = "/code/tryit.asp?filename=" + getId;
-          document.getElementById("shareLinkText").innerHTML = "https://www.simplewebeditor.netlify.com/code/tryit.asp?filename=" + getId;
-          document.getElementById('saveLoader').style.display = "none";
-          document.getElementById("saveModalSaved").style.display  = "block";
-        }
-    }
-    }
-    httpB.send(paramB);
-}
-function hideAndResetModal() {
-    document.getElementById("saveModal").style.display = "none";
-    document.getElementById('preSave').style.display = "block";
-    document.getElementById('errorSave').style.display = "none";    
-    document.getElementById('postSave').style.display = "none";
-    document.getElementById("saveModalSaved").style.display = "none";
-    document.getElementById('saveDisclaimer').style.display= "none";
-    document.getElementById('saveLoader').style.display = "block";
-}
-
-var addr = document.location.href;
-function displayError() {
-  document.getElementById("err_url").value = addr;
-  document.getElementById("err_form").style.display = "block";
-  document.getElementById("err_email").focus();
-  hideSent();
-}
-function hideError() {
-  document.getElementById("err_form").style.display = "none";
-}
-function hideSent() {
-  document.getElementById("err_sent").style.display = "none";
-}
-function sendErr() {
-  var xmlhttp;
-  var err_url = document.getElementById("err_url").value;
-  var err_email = document.getElementById("err_email").value;
-  var err_desc = document.getElementById("err_desc").value;
-  if (window.XMLHttpRequest) {// code for IE7+, Firefox, Chrome, Opera, Safari
-    xmlhttp = new XMLHttpRequest();
-  } else {// code for IE6, IE5
-    xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-  }
-  xmlhttp.open("POST", "/err_sup.asp", true);
-  xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-  xmlhttp.send("err_url=" + err_url + "&err_email=" + err_email + "&err_desc=" + escape(err_desc));
-  document.getElementById("err_desc").value = "";
-  hideError();
-  document.getElementById("err_sent").style.display = "block";
-}
-function openMenu() {
-    var x = document.getElementById("navbarDropMenu");
-    var y = document.getElementById("menuOverlay");
-    var z = document.getElementById("menuButton");
-    if (z.className.indexOf("w3-text-gray") == -1) {
-        z.className += " w3-text-gray";
-    } else { 
-        z.className = z.className.replace(" w3-text-gray", "");
-    }
-    if (z.className.indexOf("w3-gray") == -1) {
-        z.className += " w3-gray";
-    } else { 
-        z.className = z.className.replace(" w3-gray", "");
-    }
-    if (x.className.indexOf("w3-show") == -1) {
-        x.className += " w3-show";
-    } else { 
-        x.className = x.className.replace(" w3-show", "");
-    }
-    if (y.className.indexOf("w3-show") == -1) {
-        y.className += " w3-show";
-    } else { 
-        y.className = y.className.replace(" w3-show", "");
-    }
-
-}
-// When the user clicks anywhere outside of the modal, close it
-window.onclick = function(event) {
-    if (event.target == document.getElementById("saveModal")) 
-	{
-        hideAndResetModal();
-    }
-    if (event.target == document.getElementById("driveSaveModal")) 
-	{
-        resetDriveSaveModal();
-    }
-    if (event.target == document.getElementById("driveLoadModal"))
-	{
-        resetDriveLoadModal();
-    }
-    if (event.target == document.getElementById("menuOverlay")) 
-	{
-        openMenu();
-    }
-    
-}
-// function addAutoRun(){
-//  var oto = document.getElementById("textareacontainer");
-//  oto.setAttribute("onkeyup","submitTryit(1)")
-//}
-
 st = (f) =>{
      return document.getElementsByTagName(f);
 }
@@ -679,12 +403,13 @@ var auto;
   switcher = sl(".switch");
   chec = sl("#check"),
   val = sl("#displayDialog");
+  val.innerHTML = "AutoRun Disabled";
 chec.addEventListener("click",function(){
  var togoD = val.classList.remove("togoDialog"); 
  setTimeout(togoD,455000); 
    if(chec.checked == true){
 	  auto = setInterval(inti,2999); 
-    var togoD = val.innerHTML = "AutoRun Enabled";
+    var togoD =   val.innerHTML = "AutoRun Enabled";
      //val.className = "b";
    }
    else if(chec.checked === false){ 
@@ -692,13 +417,11 @@ chec.addEventListener("click",function(){
 	val.innerHTML = "AutoRun Disabled";
 	  var togoD = val.classList.add("togoDialog");  
       setTimeout(togoD,455000);
-   //val.classList.remove("b"); 
-   //r.preventDefault()
    }
 });
-  //Set background-color
+  //___________ Set background-color _________________
 changeIt.style.background = "rgb(12,27,39)";
-//Filter
+//___________( This is Filter in code function, currently not working correctly )____________
  var input, filter, div, span, textareaIn, i;
 function myFunction() {
     input = sl("#val");
@@ -706,13 +429,13 @@ function myFunction() {
     div = document.getElementById("textarea");
     span = div.getElementsByTagName("div");
     for (i = 0; i < span.length; i++) {
-        textareaIn = span[i].getElementsByTagName("textarea")[0];
-        if (textareaIn.value.toUpperCase().indexOf(filter) > -1){
-            span[i].style.display = "";
-             span[i].style.background = "yellow";
-			 //Prevent bgColor when input is empty
-             if(document.getElementById("val").value == ""){
-            span[i].style.background = "inherit";
+      textareaIn = span[i].getElementsByTagName("textarea")[0];
+      if (textareaIn.value.toUpperCase().indexOf(filter) > -1){
+          span[i].style.display = "";
+          span[i].style.background = "yellow";
+	   //___________ Prevent bgColor when input is empty _________________
+          if(document.getElementById("val").value == ""){
+           span[i].style.background = "inherit";
   
             }
         } else {
@@ -722,14 +445,149 @@ function myFunction() {
         }
     }
 }
+//_________________Add toogle title for the toggle switcher ____________________________________
 if(chec.checked == false){   
    switcher.setAttribute("title","Toggle Auto run");
-   //alert("title\",\"Enable Auto run");
  }
-var closIntro =sl(".closeIntro"),intro = sl(".layer-i");
- closIntro.addEventListener("click",function(){
+ var closIntro = sl(".closeIntro"),intro = sl(".layer-i");
+     closIntro.addEventListener("click",function(){
 	 intro.style.display="none"
  });
+ //_________________ Closer function, this close the Intro/H'page ____________
  function closeI(event){
-	 intro.style.display="none"
+	       intro.style.display="none"
  }
+ 
+/*_________________ SAVE file begin _________________ */
+   g=(k)=>document.querySelector(k);
+(function () {
+var textFile = null,
+  makeTextFile = function (text) {
+    var data = new Blob([text], {type: 'text/html'});
+
+    // If we are replacing a previously generated file we need to
+    // manually revoke the object URL to avoid memory leaks.
+    if (textFile !== null) {
+      window.URL.revokeObjectURL(textFile);
+    }
+
+    textFile = window.URL.createObjectURL(data);
+
+    return textFile;
+  };
+
+
+  var create = g('#rename'),
+    textbox = g('#textareaCode');
+
+  create.addEventListener('click', function () {
+    var link = g('#downloadlink');
+    link.href = makeTextFile(textbox.value);
+   // link.style.display = 'block';
+  }, false);
+})();
+const rnm = g("#rename");
+  let modal = g(".main_modal"),dne = g("#ok");
+  rnm.addEventListener("click",()=>{
+    //show modal
+    modal.style.display = "block";
+	g("body").style.overflow = "hidden";
+  });
+      
+    dne.addEventListener("click",(e)=>{
+      let downLink = g('#downloadlink'),
+          name = g("#name"),
+          sel = g("#slect");
+      if(name.value != ""){
+           if(sel.value.includes('.')){
+			  let str = sel.value;
+              let nstr = str.replace(/./i,"");
+              sel.value = nstr;
+			  
+             //_______Set download link
+              downLink.setAttribute("download",name.value+"."+sel.value);	     
+	        }
+	}
+	else
+	{
+       let prompted = prompt("Please put a name first");
+           name.value = prompted;
+           //_________Set download link
+           downLink.setAttribute("download",name.value+"."+sel.value)
+    }
+            //_______hide modal
+            modal.style.display = "none";
+	        g("body").style.overflow = "auto";
+      if(name.value == "")
+	  {
+         e.preventDefault();
+      }else
+		 {
+            //______Trigger download click
+            setTimeout(()=>{
+                downLink.click()
+            },500);
+         }
+});
+  //______ What if you don't want to save your file right now ?, Cansel it,right?
+  let cbrn = document.createElement("button");
+      cbrn.classList.add("brn-from-left");
+      cbrn.classList.add("cansel");
+      cbrn.id = "cansel";
+      cbrn.innerHTML = "Cansel";
+      modal.insertBefore(cbrn,modal.childNodes[0]);
+  const cansel = g("#cansel");
+        cansel.addEventListener("click",()=>{   
+       //hide modal
+        modal.style.display = "none";
+	    g("body").style.overflow="auto";
+  });
+  
+ g = (k)=>{return document.querySelector(k)};
+ 
+ //_____ KeyBord Future containing Simpols and special characters for codes
+ /*  let area = g("#textbox"),urlb = g(".ul_brn");
+  //Let's try to get Area focus as we're typing
+  function getFocus(){
+     area.focus();
+  }
+  //Define and initialize the writer function
+  function writer(e){   
+    area.value += e;
+    //This calls area focus
+    getFocus()
+   }
+  //Put the writer fun to every Input with attribute Type of Button
+ let inputs= document.querySelectorAll(".brn");
+for(inp of inputs){
+    inp.setAttribute("onclick","writer(this.value)");
+}     urlb.onclick = function(){
+  for(let i =0;i<inputs.length;i++){
+    if(inputs[i].style.textTransform != "uppercase"){
+       inputs[i].style.textTransform = "uppercase";
+       inputs[i].value =inputs[i].value.toUpperCase();
+   
+      
+    }else if(inputs[i].style.textTransform == "uppercase")
+   {
+     inputs[i].style.textTransform = "lowercase";
+       inputs[i].value =inputs[i].value.toLowerCase();
+   } //This calls area focus
+    getFocus();
+}
+  } 
+  const del = g(".funD");
+  del.onclick =()=>{
+           area.value = area.value.substring(0,area.value.length-1);
+    //This calls area focus
+    getFocus();
+  }
+  const brck = g(".funBRK");
+  brck.onclick =()=>{
+       area.value += '\n';
+    //This calls area focus
+    getFocus();
+  }
+   */
+   
+ 
