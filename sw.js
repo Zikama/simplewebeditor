@@ -2,8 +2,13 @@
 /**
  *Created With love by Nehemie, All the way from Udacity  
  */
+<<<<<<< HEAD
 var staticCacheName = 'artverb-static-v4';
 //commentqwqwqwqwqw
+=======
+var staticCacheName = 'artverb-static-v2';
+//getAttention
+>>>>>>> develop
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(staticCacheName).then((cache) => {
@@ -15,8 +20,6 @@ self.addEventListener('install', (event) => {
                 './assets/js/indexController.js',
                 './assets/js/main.js',
                 './assets/js/codemirror.js'
-                //'https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/css/bootstrap.min.css',
-                //https://use.fontawesome.com/releases/v5.1.0/css/all.css',
             ]);
         })
     );

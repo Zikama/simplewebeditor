@@ -326,7 +326,7 @@ div.CodeMirror span.CodeMirror-nonmatchingbracket {color: #f22;}
 .CodeMirror-widget {}
 
 .CodeMirror-code {
-  outline: none;
+  outline: none;    background: transparent !important;
 }
 
 /* Force content-box sizing for the elements where we expect it */

@@ -17,6 +17,7 @@ class IndexController {
         if (!navigator.serviceWorker) {
             return Promise.resolve();
         }
+		//___ trying to make a database, to store user's generated color,for later use
         return idb.open('Artb-editor', 1, (upgradeDb) => {
 
             switch(upgradeDb.oldVersion) {
@@ -26,7 +27,7 @@ class IndexController {
                     });
                     userStore.createIndex('id', 'id');
                 case 1:
-                    var exchangeRateStore = upgradeDb.createObjectStore('rate', {
+                    var exchangeRateStore = upgradeDb.createObjectStore('usually', {
                         keyPath: 'id'
                     });
                     exchangeRateStore.createIndex('rate', 'id');
