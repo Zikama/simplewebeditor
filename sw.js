@@ -2,7 +2,7 @@
 /**
  *Created With love by Nehemie, All the way from Udacity  
  */
-var staticCacheName = 'artverb-static-v2';
+var staticCacheName = 'artverb-static-v4';
 //commentqwqwqwqwqw
 self.addEventListener('install', (event) => {
     event.waitUntil(
