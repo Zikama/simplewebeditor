@@ -998,7 +998,7 @@ button:disabled {
 #cancel {
   margin-right: 8px;
 }.main_modal{
-  position:absolute;top:0;left:0;bottom:0;right:0;background:rgb(12,27,39);text-align:center;padding-top:10%;display:none;z-index:576;
+  position:absolute;top:0;left:0;bottom:0;right:0;background:rgb(12,27,39);text-align:center;padding-top:10%;display:none;z-index:576;color:azure;
   }
   .txt,#main_keyB{
     width:96.95%;font-size:18pt;max-height:70%;padding-left:14px;padding-top:10px;
@@ -1017,8 +1017,10 @@ button:disabled {
 	font-weight:bold;
   }.options{
     display:flex;flex-wrap:wrap;
+  }#rename{
+	 cursor:pointer;
   }#name{
-	  max-width:20%; width:100%;color:white;font-weight:bold;
+	  max-width:20%; width:100%;color:white;font-weight:500;text-align:center;
   }header{padding:5px;background:rgb(66,6,44);margin:0;position:fixed;top:0;left:0;right:0;height:50px;text-align:center;color:azure;font-family:monospace;
       }#main{
 	   margin-top:70px;

@@ -1,14 +1,8 @@
 //Service Worker init by Nemie
 /**
- *Created With love by Nehemie, All the way from Udacity  
+ *Created With love by Nehemie, All the way from Udacity!   
  */
-<<<<<<< HEAD
-var staticCacheName = 'artverb-static-v4';
-//commentqwqwqwqwqw
-=======
-var staticCacheName = 'artverb-static-v2';
-//getAttention
->>>>>>> develop
+var staticCacheName = 'artverb-static-v1';
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(staticCacheName).then((cache) => {

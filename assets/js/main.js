@@ -493,7 +493,8 @@ const rnm = g("#rename");
     modal.style.display = "block";
 	g("body").style.overflow = "hidden";
   });
-      
+  // Put a value to file Name
+       g("#name").value = "Myfile";
     dne.addEventListener("click",(e)=>{
       let downLink = g('#downloadlink'),
           name = g("#name"),
@@ -535,7 +536,7 @@ const rnm = g("#rename");
       cbrn.classList.add("cansel");
       cbrn.id = "cansel";
       cbrn.innerHTML = "Cansel";
-      modal.insertBefore(cbrn,modal.childNodes[0]);
+      modal.insertBefore(cbrn,modal.childNodes[4]);
   const cansel = g("#cansel");
         cansel.addEventListener("click",()=>{   
        //hide modal
